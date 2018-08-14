@@ -5,6 +5,8 @@ import sys
 
 import eval_helpers
 from eval_helpers import Joint
+sys.path.insert(
+    0, '../py-motmetrics')
 import motmetrics as mm
 
 

@@ -125,23 +125,26 @@ class Video:
             }
         ]
         return result
-
+    
     def to_old(self):
         """Return a dictionary representation for the PoseTrack17 format."""
-        res = {"annolist": []}
+        res = {
+            "annolist": []
+        }
         last_name = ""
-        for image in self.frames:
+        for image_idx,image in enumerate(self.frames):
+            elem = {}
+            elem["image"] = [image.to_old()]
+            elem["annorect"]=[]
             for person in image.people:
-                elem = {}
-                elem["image"] = [image.to_old()]
-                if elem["image"][0]["name"] == last_name:
+                if elem["image"][0]["name"] == last_name and image_idx!=0:
                     res["annolist"][-1]["annorect"].append(person.to_old())
                 else:
                     last_name = elem["image"][0]["name"]
                     elem["annorect"] = [person.to_old()]
-                    res["annolist"].append(elem)
-        return res
-
+            res["annolist"].append(elem)
+        return res    
+    
     @classmethod
     def from_old(cls, track_data):
         """Parse a dictionary representation from the PoseTrack17 format."""
@@ -199,6 +202,25 @@ class Video:
                 video.frames.append(image)
                 image_id_to_can_info[image_id] = image
             image.people.append(Person.from_new(person_info, conversion_table))
+        # for cases which do not have annotations
+        for image_info in track_data["images"]:
+            image_id = image_info["id"]
+            if image_id in image_id_to_can_info:
+                continue
+            else:
+                image = Image.from_new(track_data, image_id)
+                video_id = path.basename(path.dirname(image.posetrack_filename)).split(
+                    "_"
+                )[0]
+                #  video_id = video_id_str[1:-3]
+                if video_id in video_id_to_video.keys():
+                    video = video_id_to_video[video_id]
+                else:
+                    video = Video(video_id)
+                    video_id_to_video[video_id] = video
+                    videos.append(video)
+                video.frames.append(image)
+                image_id_to_can_info[image_id] = image
         return videos
 
 
