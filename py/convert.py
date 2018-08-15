@@ -131,16 +131,19 @@ class Video:
         res = {"annolist": []}
         last_name = ""
         for image in self.frames:
+            elem = {}
+            elem["image"] = [image.to_old()]
+            elem["annorect"]=[]
             for person in image.people:
-                elem = {}
-                elem["image"] = [image.to_old()]
+    #             print(elem["image"][0]["name"],last_name)
                 if elem["image"][0]["name"] == last_name:
-                    res["annolist"][-1]["annorect"].append(person.to_old())
+                    elem["annorect"].append(person.to_old())
                 else:
                     last_name = elem["image"][0]["name"]
                     elem["annorect"] = [person.to_old()]
-                    res["annolist"].append(elem)
-        return res
+            res["annolist"].append(elem)
+        res["annolist"]=sorted(res["annolist"],key=lambda frame_i:frame_i["image"][0]["name"])
+        return res    
 
     @classmethod
     def from_old(cls, track_data):
@@ -199,6 +202,15 @@ class Video:
                 video.frames.append(image)
                 image_id_to_can_info[image_id] = image
             image.people.append(Person.from_new(person_info, conversion_table))
+        # for cases which do not have annotations
+        for image_info in track_data["images"]:
+            image_id = image_info["id"]
+            if image_id in image_id_to_can_info:
+                continue
+            else:
+                image = Image.from_new(track_data, image_id)
+                video.frames.append(image)
+                image_id_to_can_info[image_id] = image
         return videos
 
 
