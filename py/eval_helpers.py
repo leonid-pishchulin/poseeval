@@ -155,8 +155,8 @@ def printTable(vals,motHeader=False):
         header = getMotHeader()
     else:
         header = getHeader()
-    print header
-    print row
+    print(header)
+    print(row)
     return header+"\n", row+"\n"
 
 
@@ -164,8 +164,8 @@ def printTableTracking(valsPerPart):
 
     cum = getCum(vals)
     row = getFormatRow(cum)
-    print getHeader()
-    print row
+    print(getHeader())
+    print(row)
     return getHeader()+"\n", row+"\n"
 
 
@@ -241,7 +241,7 @@ def process_arguments(argv):
 def process_arguments_server(argv):
   mode = 'multi'
 
-  print len(argv)
+  print(len(argv))
   assert len(argv) == 10, "Wrong number of arguments"
 
   gt_dir = argv[1]
@@ -330,7 +330,7 @@ def removeIgnoredPoints(gtFramesAll,prFramesAll):
 
     imgidxs = []
     for imgidx in range(len(gtFramesAll)):
-        if ("ignore_regions" in gtFramesAll[imgidx].keys() and
+        if ("ignore_regions" in list(gtFramesAll[imgidx].keys()) and
             len(gtFramesAll[imgidx]["ignore_regions"]) > 0):
             regions = gtFramesAll[imgidx]["ignore_regions"]
             polyList = []
@@ -352,9 +352,9 @@ def removeIgnoredPoints(gtFramesAll,prFramesAll):
 
 
 def rectHasPoints(rect):
-    return (("annopoints" in rect.keys()) and
+    return (("annopoints" in list(rect.keys())) and
             (len(rect["annopoints"]) > 0 and len(rect["annopoints"][0]) > 0) and
-            ("point" in rect["annopoints"][0].keys()))
+            ("point" in list(rect["annopoints"][0].keys())))
 
 
 def removeRectsWithoutPoints(rects):
@@ -388,13 +388,13 @@ def load_data_dir(argv):
         gt[imgidx]["seq_id"] = i
         gt[imgidx]["seq_name"] = os.path.basename(filenames[i]).split('.')[0]
         for ridxGT in range(len(gt[imgidx]["annorect"])):
-            if ("track_id" in gt[imgidx]["annorect"][ridxGT].keys()):
+            if ("track_id" in list(gt[imgidx]["annorect"][ridxGT].keys())):
                 # adjust track_ids to make them unique across all sequences
                 assert(gt[imgidx]["annorect"][ridxGT]["track_id"][0] < MAX_TRACK_ID)
                 gt[imgidx]["annorect"][ridxGT]["track_id"][0] += i*MAX_TRACK_ID
     gtFramesAll += gt
     gtBasename = os.path.basename(filenames[i])
-    predFilename = pred_dir + gtBasename
+    predFilename = os.path.join(pred_dir, gtBasename)
 
     if (not os.path.exists(predFilename)):
         raise IOError('Prediction file ' + predFilename + ' does not exist')
@@ -405,11 +405,11 @@ def load_data_dir(argv):
     if (not "annolist" in data):
         data = convert_videos(data)[0]
     pr = data["annolist"]
-    if (len(pr) <> len(gt)):
+    if (len(pr) != len(gt)):
         raise Exception('# prediction frames %d <> # GT frames %d for %s' % (len(pr),len(gt),predFilename))
     for imgidx in range(len(pr)):
         for ridxPr in range(len(pr[imgidx]["annorect"])):
-            if ("track_id" in pr[imgidx]["annorect"][ridxPr].keys()):
+            if ("track_id" in list(pr[imgidx]["annorect"][ridxPr].keys())):
                 # adjust track_ids to make them unique across all sequences
                 assert(pr[imgidx]["annorect"][ridxPr]["track_id"][0] < MAX_TRACK_ID)
                 pr[imgidx]["annorect"][ridxPr]["track_id"][0] += i*MAX_TRACK_ID
@@ -472,8 +472,8 @@ def assignGTmulti(gtFrames, prFrames, distThresh):
         trackidxPr = []
         idxsPr = []
         for ridxPr in range(len(prFrames[imgidx]["annorect"])):
-            if (("annopoints" in prFrames[imgidx]["annorect"][ridxPr].keys()) and
-                ("point" in prFrames[imgidx]["annorect"][ridxPr]["annopoints"][0].keys())):
+            if (("annopoints" in list(prFrames[imgidx]["annorect"][ridxPr].keys())) and
+                ("point" in list(prFrames[imgidx]["annorect"][ridxPr]["annopoints"][0].keys()))):
                 idxsPr += [ridxPr];
         prFrames[imgidx]["annorect"] = [prFrames[imgidx]["annorect"][ridx] for ridx in idxsPr]
 
@@ -483,7 +483,7 @@ def assignGTmulti(gtFrames, prFrames, distThresh):
         for ridxGT in range(len(gtFrames[imgidx]["annorect"])):
             # GT pose
             rectGT = gtFrames[imgidx]["annorect"][ridxGT]
-            if ("track_id" in rectGT.keys()):
+            if ("track_id" in list(rectGT.keys())):
                 trackidxGT += [rectGT["track_id"][0]]
             pointsGT = []
             if len(rectGT["annopoints"]) > 0:
@@ -499,17 +499,17 @@ def assignGTmulti(gtFrames, prFrames, distThresh):
         for ridxPr in range(len(prFrames[imgidx]["annorect"])):
             # predicted pose
             rectPr = prFrames[imgidx]["annorect"][ridxPr]
-            if ("track_id" in rectPr.keys()):
+            if ("track_id" in list(rectPr.keys())):
                 trackidxPr += [rectPr["track_id"][0]]
             pointsPr = rectPr["annopoints"][0]["point"]
             for i in range(nJoints):
                 # predicted joint in LSP format
                 ppPr = getPointGTbyID(pointsPr, i)
                 if len(ppPr) > 0:
-                    if not ("score" in ppPr.keys()):
+                    if not ("score" in list(ppPr.keys())):
                         # use minimum score if predicted score is missing
                         if (imgidx == 0):
-                            print('WARNING: prediction score is missing. Setting fallback score={}'.format(MIN_SCORE))
+                            print(('WARNING: prediction score is missing. Setting fallback score={}'.format(MIN_SCORE)))
                         score[ridxPr, i] = MIN_SCORE
                     else:
                         score[ridxPr, i] = ppPr["score"][0]

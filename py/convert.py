@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Convert between COCO and PoseTrack2017 format."""
 # pylint: disable=too-many-branches, too-many-locals, bad-continuation, unsubscriptable-object
-from __future__ import print_function
+
 
 import json
 import logging
@@ -149,7 +149,7 @@ class Video:
     @classmethod
     def from_old(cls, track_data):
         """Parse a dictionary representation from the PoseTrack17 format."""
-        assert "annolist" in track_data.keys(), "Wrong format!"
+        assert "annolist" in list(track_data.keys()), "Wrong format!"
         video = None
         for image_info in track_data["annolist"]:
             image = Image.from_old(image_info)
@@ -189,7 +189,7 @@ class Video:
             video_id = path.basename(path.dirname(image.posetrack_filename)).split(
                 "_"
             )[0]
-            if video_id in video_id_to_video.keys():
+            if video_id in list(video_id_to_video.keys()):
                 video = video_id_to_video[video_id]
             else:
                 video = Video(video_id)
@@ -231,7 +231,7 @@ class Person:
         keypoints = []
         scores = []
         write_scores = (
-            len([1 for lm_info in self.landmarks if "score" in lm_info.keys()]) > 0
+            len([1 for lm_info in self.landmarks if "score" in list(lm_info.keys())]) > 0
         )
         for landmark_name in POSETRACK18_LM_NAMES_COCO_ORDER:
             try:
@@ -243,10 +243,10 @@ class Person:
             except IndexError:
                 landmark_info = {"x": 0, "y": 0, "is_visible": 0}
             is_visible = 1
-            if "is_visible" in landmark_info.keys():
+            if "is_visible" in list(landmark_info.keys()):
                 is_visible = landmark_info["is_visible"]
             keypoints.extend([landmark_info["x"], landmark_info["y"], is_visible])
-            if "score" in landmark_info.keys():
+            if "score" in list(landmark_info.keys()):
                 scores.append(landmark_info["score"])
             elif write_scores:
                 LOGGER.warning("Landmark with missing score info detected. Using 0.")
@@ -281,7 +281,7 @@ class Person:
             if (
                 landmark_info["x"] == 0
                 and landmark_info["y"] == 0
-                and "is_visible" in landmark_info.keys()
+                and "is_visible" in list(landmark_info.keys())
                 and landmark_info["is_visible"] == 0
             ):
                 # The points in new format are stored like this if they're unannotated.
@@ -292,9 +292,9 @@ class Person:
                 "x": [landmark_info["x"]],
                 "y": [landmark_info["y"]],
             }
-            if "score" in landmark_info.keys():
+            if "score" in list(landmark_info.keys()):
                 point["score"] = [landmark_info["score"]]
-            if "is_visible" in landmark_info.keys():
+            if "is_visible" in list(landmark_info.keys()):
                 point["is_visible"] = [landmark_info["is_visible"]]
             keypoints.append(point)
         # ret = {"track_id": [self.track_id], "annopoints": keypoints}
@@ -330,7 +330,7 @@ class Person:
         except KeyError:
             pass
         person.landmarks = []
-        if "annopoints" not in person_info.keys() or not person_info["annopoints"]:
+        if "annopoints" not in list(person_info.keys()) or not person_info["annopoints"]:
             return person
         lm_x_values = []
         lm_y_values = []
@@ -342,14 +342,14 @@ class Person:
             }
             lm_x_values.append(lm_dict["x"])
             lm_y_values.append(lm_dict["y"])
-            if "score" in landmark_info.keys():
+            if "score" in list(landmark_info.keys()):
                 lm_dict["score"] = landmark_info["score"][0]
                 assert len(landmark_info["score"]) == 1, "Invalid format!"
             elif not SCORE_WARNING_EMITTED:
                 LOGGER.warning("No landmark scoring information found!")
                 LOGGER.warning("This will not be a valid submission file!")
                 SCORE_WARNING_EMITTED = True
-            if "is_visible" in landmark_info.keys():
+            if "is_visible" in list(landmark_info.keys()):
                 lm_dict["is_visible"] = landmark_info["is_visible"][0]
             person.landmarks.append(lm_dict)
             assert (
@@ -393,7 +393,7 @@ class Person:
             person.rect = rect
         except KeyError:
             person.rect = None
-        if "score" in person_info.keys():
+        if "score" in list(person_info.keys()):
             person.score = person_info["score"]
         try:
             landmark_scores = person_info["scores"]
@@ -489,7 +489,7 @@ class Image:
         image = Image(posetrack_filename, frame_id)
         for person_info in json_data["annorect"]:
             image.people.append(Person.from_old(person_info))
-        if "ignore_regions" in json_data.keys():
+        if "ignore_regions" in list(json_data.keys()):
             ignore_regions_x = []
             ignore_regions_y = []
             for ignore_region in json_data["ignore_regions"]:
@@ -518,8 +518,8 @@ class Image:
         frame_id = posetrack18_fname2id(old_seq_fp, old_frame_id)
         image = Image(posetrack_filename, frame_id)
         if (
-            "ignore_regions_x" in image_info.keys()
-            and "ignore_regions_y" in image_info.keys()
+            "ignore_regions_x" in list(image_info.keys())
+            and "ignore_regions_y" in list(image_info.keys())
         ):
             image.ignore_regions = (
                 image_info["ignore_regions_x"],
@@ -569,11 +569,11 @@ def cli(in_fp, out_fp="converted"):
         first_track = json.load(inf)
     # Determine format.
     old_to_new = False
-    if "annolist" in first_track.keys():
+    if "annolist" in list(first_track.keys()):
         old_to_new = True
         LOGGER.info("Detected PoseTrack17 format. Converting to 2018...")
     else:
-        assert "images" in first_track.keys(), "Unknown image format. :("
+        assert "images" in list(first_track.keys()), "Unknown image format. :("
         LOGGER.info("Detected PoseTrack18 format. Converting to 2017...")
 
     videos = []
@@ -605,12 +605,12 @@ def cli(in_fp, out_fp="converted"):
 
 def convert_videos(track_data):
     """Convert between PoseTrack18 and PoseTrack17 format."""
-    if "annolist" in track_data.keys():
+    if "annolist" in list(track_data.keys()):
         old_to_new = True
         LOGGER.info("Detected PoseTrack17 format. Converting to 2018...")
     else:
         old_to_new = False
-        assert "images" in track_data.keys(), "Unknown image format. :("
+        assert "images" in list(track_data.keys()), "Unknown image format. :("
         LOGGER.info("Detected PoseTrack18 format. Converting to 2017...")
 
     if (old_to_new):

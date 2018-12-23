@@ -1,7 +1,4 @@
 import numpy as np
-import json
-import os
-import sys
 
 import eval_helpers
 
@@ -22,7 +19,7 @@ def computeDist(gtFrames,prFrames):
             for ridx in range(len(gtFrames[imgidx]["annorect"])):
                 rectGT = gtFrames[imgidx]["annorect"][ridx]
                 rectPr = prFrames[imgidx]["annorect"][ridx]
-                if ("annopoints" in rectGT.keys() and rectGT["annopoints"] != None):
+                if ("annopoints" in list(rectGT.keys()) and rectGT["annopoints"] != None):
                     pointsGT = rectGT["annopoints"][0]["point"]
                     pointsPr = rectPr["annopoints"][0]["point"]
                     for pidx in range(len(pointsGT)):
