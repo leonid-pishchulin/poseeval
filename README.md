@@ -6,7 +6,7 @@ Adapted by Sven Kreiss.
 Install directly from GitHub:
 
 ```
-pip install https://github.com/svenkreiss/poseval.git
+pip install git+https://github.com/svenkreiss/poseval.git
 ```
 
 Install from a local clone:
