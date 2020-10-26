@@ -388,7 +388,7 @@ def load_data_dir(argv):
                 gt[imgidx]["annorect"][ridxGT]["track_id"][0] += i*MAX_TRACK_ID
     gtFramesAll += gt
     gtBasename = os.path.basename(filenames[i])
-    predFilename = pred_dir + gtBasename
+    predFilename = os.path.join(pred_dir, gtBasename)
 
     if (not os.path.exists(predFilename)):
         raise IOError('Prediction file ' + predFilename + ' does not exist')
